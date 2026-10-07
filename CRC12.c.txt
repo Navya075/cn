@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 1000
+
+// CRC division using XOR
+void crcDivision(char data[], char generator[], char remainder[])
+{
+    int dataLen = strlen(data);
+    int genLen = strlen(generator);
+
+    char temp[MAX];
+    strcpy(temp, data);
+
+    for (int i = 0; i <= dataLen - genLen; i++)
+    {
+        if (temp[i] == '1')
+        {
+            for (int j = 0; j < genLen; j++)
+            {
+                if (temp[i + j] == generator[j])
+                    temp[i + j] = '0';
+                else
+                    temp[i + j] = '1';
+            }
+        }
+    }
+
+    // Last 12 bits are the CRC remainder
+    strcpy(remainder, &temp[dataLen - genLen + 1]);
+}
+
+// Convert word into 8-bit ASCII binary
+void wordToBinary(char word[], char binary[])
+{
+    binary[0] = '\0';
+
+    for (int i = 0; word[i] != '\0'; i++)
+    {
+        unsigned char ch = word[i];
+
+        for (int j = 7; j >= 0; j--)
+        {
+            if (ch & (1 << j))
+                strcat(binary, "1");
+            else
+                strcat(binary, "0");
+        }
+    }
+}
+
+int main()
+{
+    char word[100];
+
+    // CRC-12 generator:
+    // x^12 + x^11 + x^3 + x^2 + x + 1
+    char generator[] = "1100000001111";
+
+    char data[MAX];
+    char paddedData[MAX];
+    char remainder[20];
+    char transmitted[MAX];
+
+    printf("Enter a word: ");
+    scanf("%s", word);
+
+    // Convert word to binary
+    wordToBinary(word, data);
+
+    printf("\nData in binary    : %s\n", data);
+    printf("CRC-12 Generator  : %s\n", generator);
+
+    // Append 12 zeros
+    strcpy(paddedData, data);
+
+    for (int i = 0; i < 12; i++)
+        strcat(paddedData, "0");
+
+    // Calculate CRC
+    crcDivision(paddedData, generator, remainder);
+
+    printf("CRC-12 Remainder  : %s\n", remainder);
+
+    // Create transmitted data
+    strcpy(transmitted, data);
+    strcat(transmitted, remainder);
+
+    printf("Transmitted Data  : %s\n", transmitted);
+
+    return 0;
+}
